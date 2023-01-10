@@ -1,14 +1,17 @@
 {
-  "name": "knex-clickhouse-dialect",
-  "version": "1.0.0",
-  "description": "",
-  "main": "src/main.js",
+  "name": "@dnap/knex-clickhouse-dialect",
+  "version": "1.0.1",
+  "main": "src/index.js",
   "scripts": {
     "test": "mocha tests/*.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DnAp/KnexClickhouseDialect.git"
+  },
   "keywords": [],
-  "author": "",
-  "license": "UNLICENSED",
+  "author": "Anatolii Lebedev",
+  "license": "MIT",
   "dependencies": {
     "clickhouse": "^2.6.0",
     "knex": "^2.4.0",
@@ -19,5 +22,13 @@
     "@types/node": "^14.14.6",
     "mocha": "^10.2.0",
     "chai": "^4.3.6"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/DnAp/KnexClickhouseDialect/issues"
+  },
+  "homepage": "https://github.com/DnAp/KnexClickhouseDialect#readme",
+  "directories": {
+    "test": "tests"
+  },
+  "description": ""
 }
