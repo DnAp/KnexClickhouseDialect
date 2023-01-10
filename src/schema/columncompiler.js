@@ -1,9 +1,9 @@
 // ClickHouse Column Compiler
 // -------
-import ColumnCompiler from 'knex/lib/schema/columncompiler.js';
-import Raw from 'knex/lib/raw.js';
+const ColumnCompiler = require('knex/lib/schema/columncompiler');
+const Raw = require('knex/lib/raw');
 
-export default class ColumnCompilerClickHouse extends ColumnCompiler {
+class ColumnCompilerClickHouse extends ColumnCompiler {
     modifiers = [
         'defaultTo',
     ];
@@ -99,3 +99,4 @@ export default class ColumnCompilerClickHouse extends ColumnCompiler {
     }
 }
 
+module.exports = ColumnCompilerClickHouse;

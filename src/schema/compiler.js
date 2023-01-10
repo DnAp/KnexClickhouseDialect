@@ -1,8 +1,8 @@
 // ClickHouse Schema Compiler
 // -------
-import SchemaCompiler from 'knex/lib/schema/compiler.js';
+const SchemaCompiler = require('knex/lib/schema/compiler');
 
-export default class SchemaCompilerClickHouse extends SchemaCompiler {
+class SchemaCompilerClickHouse extends SchemaCompiler {
     // Rename a table on the schema.
     renameTable(tableName, to) {
         this.pushQuery(
@@ -38,3 +38,4 @@ export default class SchemaCompilerClickHouse extends SchemaCompiler {
         });
     }
 }
+module.exports = SchemaCompilerClickHouse;

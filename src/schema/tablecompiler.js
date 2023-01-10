@@ -1,10 +1,10 @@
 // ClicHouse Table Builder & Compiler
 // -------
-import TableCompiler from "knex/lib/schema/tablecompiler.js";
+const TableCompiler = require("knex/lib/schema/tablecompiler");
 // Table Compiler
 // ------
 
-export default class TableCompilerClickHouse extends TableCompiler {
+class TableCompilerClickHouse extends TableCompiler {
     addColumnsPrefix = 'add ';
 
     alterColumnsPrefix = 'modify ';
@@ -225,3 +225,5 @@ export default class TableCompilerClickHouse extends TableCompiler {
         this.pushQuery(`alter table ${this.tableName()} drop index ${indexName}`);
     }
 }
+
+module.exports = TableCompilerClickHouse;

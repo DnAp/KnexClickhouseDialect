@@ -1,4 +1,4 @@
-export async function up(knex) {
+exports.up = async function up(knex) {
     await knex.raw(`
         create table test_migration
         (
@@ -13,6 +13,6 @@ export async function up(knex) {
     `);
 }
 
-export async function down(knex) {
+exports.down = async function down(knex) {
     await knex.raw('drop table test_migration');
 }

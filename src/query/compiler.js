@@ -1,8 +1,7 @@
 // Clickhouse Query Compiler
 // ------
-import QueryCompiler from 'knex/lib/query/querycompiler.js';
-import _ from 'lodash';
-
+const QueryCompiler = require('knex/lib/query/querycompiler');
+const _ = require('lodash');
 
 class QueryCompilerClickhouse extends QueryCompiler {
     _emptyInsertValue = '() values ()';
@@ -68,4 +67,4 @@ class QueryCompilerClickhouse extends QueryCompiler {
 
 // Set the QueryBuilder & QueryCompiler on the client object,
 // in case anyone wants to modify things to suit their own purposes.
-export default QueryCompilerClickhouse;
+module.exports = QueryCompilerClickhouse;

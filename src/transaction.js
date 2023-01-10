@@ -1,7 +1,7 @@
 /**
  * @implements {Knex.Transaction}
  */
-export default class TransactionClickHouse {
+class TransactionClickHouse {
   executionPromise = Promise.resolve(undefined);
 
   commit(value) {
@@ -23,4 +23,6 @@ export default class TransactionClickHouse {
   savepoint(transactionScope) {
     return undefined;
   }
-};
+}
+
+module.exports = TransactionClickHouse;

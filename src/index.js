@@ -1,19 +1,19 @@
 /* eslint-disable consistent-return */
 // ClickHouse Client
 // -------
-import Client from 'knex/lib/client.js';
-import QueryCompiler from './query/compiler.js';
-import SchemaCompilerClickHouse from './schema/compiler.js';
-import _ from 'lodash';
-import {makeEscape} from "knex/lib/util/string.js";
-import TableBuilder from "knex/lib/schema/tablebuilder.js";
-import sqlString from 'sqlstring';
+const Client = require('knex/lib/client');
+const QueryCompiler = require('./query/compiler');
+const SchemaCompilerClickHouse = require('./schema/compiler');
+const _ = require('lodash');
+const makeEscape = require("knex/lib/util/string").makeEscape;
+const TableBuilder = require("knex/lib/schema/tablebuilder");
+const sqlString = require('sqlstring');
 
-import ColumnCompilerClickHouse from './schema/columncompiler.js';
-import TableCompilerClickHouse from './schema/tablecompiler.js';
-import TransactionClickHouse from './transaction.js';
+const ColumnCompilerClickHouse = require('./schema/columncompiler');
+const TableCompilerClickHouse = require('./schema/tablecompiler');
+const TransactionClickHouse = require('./transaction');
 
-import clickhouse from "clickhouse";
+const clickhouse = require("clickhouse");
 
 function ltrimSlashes(v) {
     return v.replace(/^\//g, '');
@@ -244,4 +244,4 @@ class ClientClickhouse extends Client {
     }
 }
 
-export default ClientClickhouse;
+module.exports = ClientClickhouse;

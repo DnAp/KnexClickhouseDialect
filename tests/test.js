@@ -1,13 +1,12 @@
-import client from "../src/index.js";
-import knex from "knex";
-import {expect} from "chai";
-import {log} from "util";
+const knex = require("knex");
+const client = require("../src/index");
+const expect = require("chai").expect;
 
 const ClickHouseURL = "clickhouse://default@localhost:8123/default"
 
 describe("Basic operations", () => {
     let db = knex({
-        client,
+        client: client,
         connection: () => ClickHouseURL,
     });
 
@@ -179,7 +178,7 @@ describe("Basic operations", () => {
 
         let migrateResult = await dbMigration.migrate.latest();
         expect(migrateResult[0]).to.be.equal(1);
-        expect(migrateResult[1]).to.be.deep.equal(['20221024231500_test_migration.js']);
+        expect(migrateResult[1]).to.be.deep.equal(['20221024231500_test_migration']);
         expect(await dbMigration.migrate.currentVersion()).to.be.equal('20221024231500');
         expect(await dbMigration.schema.hasTable("test_migration")).to.be.equal(true);
     });
