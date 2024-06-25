@@ -109,6 +109,7 @@ class ClientClickhouse extends Client {
                 debug: false,
                 basicAuth: null,
                 isUseGzip: false,
+                usePost: true,
                 config: {
                     session_timeout: 60,
                     output_format_json_quote_64bit_integers: 0,
