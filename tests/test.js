@@ -155,9 +155,69 @@ describe("Basic operations", () => {
         expect(rows[0].stringA).to.be.equal("updated");
     });
 
+    it("Insert Big Data", async () => {
+        await db.schema.dropTableIfExists("test_storage");
+        await db.schema.raw(`
+            create table test_storage
+            (
+                date         Date,
+                date_time    DATETIME64,
+                server_id    LowCardinality(String),
+                item_id      LowCardinality(String),
+                quantity     UInt32,
+                type         Enum8('take' = 0, 'put' = 1),
+                reason       LowCardinality(String),
+                go_id_target LowCardinality(String),
+                user_id      Nullable(Int64),
+                extra_data   String,
+                operation_id UUID,
+                alliance_id  Array(String),
+                faction_id   Array(String),
+                position Tuple(x Nullable(UInt16), y Nullable(UInt16)),
+                remainder UInt32
+            )
+            engine = MergeTree order by date
+        `);
+
+        const data = [];
+        const dateNow = Date.now();
+        for (let i = 0; i < 5000; i++) {
+            data.push({
+                date: dateNow / 1000,
+                date_time: dateNow,
+                server_id: 'prod1',
+                item_id: 'Defibrillator',
+                quantity: 99,
+                type: 'take',
+                reason: 'StorageOperationReason',
+                go_id_target: 'Player999999/Storage',
+                alliance_id: null,
+                faction_id: null,
+                user_id: 999999,
+                operation_id: 'e7ea5d80-1a8a-11ef-b7e6-bddd9c560874',
+                extra_data: '{}',
+                remainder: 0,
+                position: db.raw(
+                    'tuple(?, ?)',
+                    [1, 1],
+                ),
+            });
+        }
+        let error = false;
+        await db
+            .insert(data)
+            .into("test_storage")
+            .catch((e) => {
+                console.error(e);
+                error = true;
+            });
+        expect(error).to.be.equal(false);
+    });
+
     it("Drop tables", async () => {
         expect(await db.schema.hasTable("test")).to.be.equal(true);
         await db.schema.dropTable("test");
+        await db.schema.dropTableIfExists("test_storage");
         expect(await db.schema.hasTable("test")).to.be.equal(false);
     });
 
