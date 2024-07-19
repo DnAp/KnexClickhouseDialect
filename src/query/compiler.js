@@ -1,6 +1,7 @@
 // Clickhouse Query Compiler
 // ------
 const QueryCompiler = require('knex/lib/query/querycompiler');
+const {dateToString} = require('knex/lib/util/string');
 const _ = require('lodash');
 
 class QueryCompilerClickhouse extends QueryCompiler {
@@ -8,7 +9,7 @@ class QueryCompilerClickhouse extends QueryCompiler {
 
     constructor(client, builder, bindings) {
         super(client, builder, bindings);
-        const { returning } = this.single;
+        const {returning} = this.single;
 
         if (returning) {
             this.client.logger.warn(
@@ -19,12 +20,44 @@ class QueryCompilerClickhouse extends QueryCompiler {
 
     // Update method, including joins, wheres, order & limits.
     update() {
-        const { tableName } = this;
+        const {tableName} = this;
         const updateData = this._prepUpdate(this.single.update);
         const wheres = this.where();
         return `ALTER TABLE ${tableName} UPDATE ` +
             updateData.join(', ') +
             (wheres ? ` ${wheres}` : '');
+    }
+
+    insert() {
+        let rows = this.single.insert;
+        if (!(rows instanceof Array)) {
+            rows = [rows];
+        }
+        const values = [];
+        for (const originalRow of rows) {
+            const row = {...originalRow};
+            for (const key in row) {
+                if (row[key] instanceof Date) {
+                    row[key] = dateToString(row[key]);
+                } else if (row[key] === undefined) {
+                    row[key] = null;
+                }
+            }
+            values.push(row);
+        }
+
+        return {
+            sql: 'insert',
+            bindings: {
+                table: this.tableName,
+                values,
+                clickhouse_settings: {date_time_input_format: 'best_effort'},
+            }
+        };
+        // // insertData
+        // this._ooo = 1;
+        // this.single._ooo= 2;
+        // return {sql: 'INSERT INTO ' + tableName + ' FORMAT JSONEachRow \n', bindings: values};
     }
 
     // Compiles a `columnInfo` query.

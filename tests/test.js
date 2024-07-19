@@ -2,16 +2,19 @@ const knex = require("knex");
 const client = require("../src/index");
 const expect = require("chai").expect;
 
-const ClickHouseURL = "clickhouse://default@localhost:8123/default"
+const ClickHouseURL = "http://default@localhost:8123/default"
 
 describe("Basic operations", () => {
     let db = knex({
         client: client,
-        connection: () => ClickHouseURL,
+        connection: {
+            url: ClickHouseURL,
+            debug: true
+        },
     });
 
     it("Test connection", async () => {
-        await db.raw("SELECT 1");
+        await db.raw("SELECT * FROM system.tables LIMIT 2");
     });
 
     it("Create tables", async () => {
@@ -49,7 +52,7 @@ describe("Basic operations", () => {
                 mediumintA: 1,
                 integerA: 1,
                 bigintA: 1,
-                dateA: new Date(),
+                dateA: '2024-01-01',
                 datetimeA: new Date(),
                 datetimeB: new Date(),
             })
@@ -57,7 +60,7 @@ describe("Basic operations", () => {
 
         await db
             .table("test")
-            .insert({
+            .insert([{
                 stringA: "test2",
                 stringB: "test2",
                 stringC: "test2",
@@ -68,10 +71,21 @@ describe("Basic operations", () => {
                 dateA: new Date(),
                 datetimeA: new Date(),
                 datetimeB: new Date(),
-            });
+            }, {
+                stringA: "test3",
+                stringB: "test3",
+                stringC: "test3",
+                smallintA: 3,
+                mediumintA: 3,
+                integerA: 3,
+                bigintA: 3,
+                dateA: new Date(1000000000),
+                datetimeA: new Date(1000000000),
+                datetimeB: new Date(1000000000),
+            }]);
 
         const users = await db.select("*").from("test").orderBy("smallintA");
-        expect(users.length).to.be.equal(2);
+        expect(users.length).to.be.equal(3);
         let user = users[0];
         expect(user.uuid).to.be.a("string");
         expect(user.stringA).to.be.equal("test1");
@@ -95,6 +109,17 @@ describe("Basic operations", () => {
         expect(user.dateA).to.be.a("string");
         expect(user.datetimeA).to.be.a("string");
         expect(user.datetimeB).to.be.a("string");
+        user = users[2];
+        expect(user.stringA).to.be.equal("test3");
+        expect(user.stringB).to.be.equal("test3");
+        expect(user.stringC).to.be.equal("test3");
+        expect(user.smallintA).to.be.equal(3);
+        expect(user.mediumintA).to.be.equal(3);
+        expect(user.integerA).to.be.equal(3);
+        expect(user.bigintA).to.be.equal(3);
+        expect(user.dateA).to.be.equal("2011-03-13");
+        expect(user.datetimeA).to.be.equal("2011-03-13 07:06:40");
+        expect(user.datetimeB).to.be.equal("2011-03-13 07:06:40");
     });
 
     it("Sorting", async () => {

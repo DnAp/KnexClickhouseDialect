@@ -13,11 +13,7 @@ const ColumnCompilerClickHouse = require('./schema/columncompiler');
 const TableCompilerClickHouse = require('./schema/tablecompiler');
 const TransactionClickHouse = require('./transaction');
 
-const clickhouse = require("clickhouse");
-
-function ltrimSlashes(v) {
-    return v.replace(/^\//g, '');
-}
+const clickhouse = require("@clickhouse/client");
 
 // Always initialize with the "QueryBuilder" and "QueryCompiler"
 // objects, which extend the base 'lib/query/builder' and
@@ -90,7 +86,10 @@ class ClientClickhouse extends Client {
     // connection needs to be added to the pool.
     async acquireRawConnection() {
         let config = await this.getConfiguration();
-        return new (this.driver.ClickHouse)(config);
+        if (!config?.session_id) {
+            config.session_id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        }
+        return clickhouse.createClient(config);
     }
 
     async getConfiguration() {
@@ -98,26 +97,6 @@ class ClientClickhouse extends Client {
         if (_.isFunction(config)) {
             config = await config();
         }
-        if (_.isString(config)) {
-            const url = new URL(config);
-            config = {
-                url: url.hostname,
-                port: url.port ? url.port : 8123,
-                user: url.username,
-                password: url.password,
-                database: ltrimSlashes(url.pathname),
-                debug: false,
-                basicAuth: null,
-                isUseGzip: false,
-                usePost: true,
-                config: {
-                    session_timeout: 60,
-                    output_format_json_quote_64bit_integers: 0,
-                    enable_http_compression: 0,
-                },
-            };
-        }
-
         return config;
     }
 
@@ -153,35 +132,6 @@ class ClientClickhouse extends Client {
         });
     }
 
-    /**
-     * Runs the query on the specified connection, providing the bindingsand any other necessary prep work.
-     */
-    async _query(connection, obj) {
-        if (!obj || typeof obj === 'string')
-            obj = { sql: obj };
-        // dirty hack for knex-migrator
-        if(['insert', 'update'].includes(obj.method) && obj.sql.indexOf(this._migrationLockTableName) > -1) {
-            obj.response = [[], []]
-            return obj;
-        }
-        return new Promise((resolver, rejecter) => {
-            if (!obj.sql) {
-                resolver();
-                return;
-            }
-
-            const queryOptions = _.assign({ sql: obj.sql }, obj.options);
-            const query = this._applyBindings(queryOptions.sql, obj.bindings);
-
-            connection.query(query, (err, rows, fields) => {
-                if (err)
-                    return rejecter(err);
-                obj.response = [rows, fields];
-                resolver(obj);
-            });
-        });
-    }
-
     _applyBindings(sql, bindings) {
         for (let i = 0; i < bindings.length; i++) {
             if (bindings[i] instanceof Date) {
@@ -193,16 +143,46 @@ class ClientClickhouse extends Client {
         return sqlString.format(sql, bindings);
     }
 
+    /**
+     * Runs the query on the specified connection, providing the bindingsand any other necessary prep work.
+     */
+    async _query(connection, obj) {
+        if (!obj || typeof obj === 'string')
+            obj = { sql: obj };
+        // dirty hack for knex-migrator
+        if(['insert', 'update'].includes(obj.method) && obj.sql.indexOf(this._migrationLockTableName) > -1) {
+            obj.response = [[], []]
+            return obj;
+        }
+        if (!obj.sql) {
+            return;
+        }
+        if(obj.sql === 'insert') {
+            const res = await connection.insert({
+                format: 'JSONEachRow',
+                ...obj.bindings
+            });
+            console.log(res);
+        }
+        const queryOptions = _.assign({ sql: obj.sql }, obj.options);
+        const query = this._applyBindings(queryOptions.sql, obj.bindings);
+        const response = await connection.exec({
+            query,
+            format: 'JSONEachRow',
+        });
+        obj.rawResponse = response;
+        obj.rows = await response.json();
+        return obj;
+    }
+
     // Process the response as returned from the query.
     processResponse(obj, runner) {
         if (obj == null)
             return;
-        const { response } = obj;
-        const { method } = obj;
-        const rows = response[0];
-        const fields = response[1];
+
+        const { response, method, rows } = obj;
         if (obj.output)
-            return obj.output.call(runner, rows, fields);
+            return obj.output.call(runner, rows, null);
         switch (method) {
             case 'select':
             case 'pluck':
